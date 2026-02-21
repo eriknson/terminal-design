@@ -4,12 +4,16 @@ import Link from "next/link";
 import DemoDesktop from "@/components/DemoDesktop";
 import AnimatedAgentCLIPanel from "@/components/AnimatedAgentCLIPanel";
 import AuthPanel from "@/components/AuthPanel";
+import AuthPanelHighFps from "@/components/AuthPanelHighFps";
 import AuthAltPanel from "@/components/AuthAltPanel";
 import { SCENARIOS } from "@/lib/scenarios";
 
 function getWindowContent(scenario: (typeof SCENARIOS)[number]) {
   if (scenario.type === "custom" && scenario.slug === "auth") {
     return <AuthPanel key={scenario.slug} />;
+  }
+  if (scenario.type === "custom" && scenario.slug === "auth-high-fps") {
+    return <AuthPanelHighFps key={scenario.slug} />;
   }
   if (scenario.type === "custom" && scenario.slug === "auth-alt") {
     return <AuthAltPanel key={scenario.slug} />;

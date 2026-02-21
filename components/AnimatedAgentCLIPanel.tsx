@@ -148,12 +148,16 @@ function CLISpinnerShimmer({
       : "⬡";
 
   const colorStyle = done
-    ? "var(--color-theme-text)"
+    ? "var(--color-theme-border-02)"
     : color === "purple"
       ? "#a78bfa"
       : "#4ade80";
 
-  return <span style={{ color: colorStyle }}>{hexGlyph}</span>;
+  return (
+    <span style={{ color: colorStyle, position: "relative", top: "-1px" }}>
+      {hexGlyph}
+    </span>
+  );
 }
 
 // =============================================================================
@@ -533,10 +537,7 @@ export default function AnimatedAgentCLIPanel({
             {/* Thinking */}
             {(isThinking || pastThinking) && (
               <div className="flex items-start gap-2">
-                <CLISpinnerShimmer
-                  done={!isThinking}
-                  syncTick={isThinking ? syncTick : undefined}
-                />
+                {isThinking && <CLISpinnerShimmer syncTick={syncTick} />}
                 <span
                   style={{
                     color: isThinking
@@ -557,10 +558,7 @@ export default function AnimatedAgentCLIPanel({
             {/* Read context - toolCall1 */}
             {(isToolCall1 || pastToolCall1) && (
               <div className="flex items-start gap-2">
-                <CLISpinnerShimmer
-                  done={!isToolCall1}
-                  syncTick={isToolCall1 ? syncTick : undefined}
-                />
+                {isToolCall1 && <CLISpinnerShimmer syncTick={syncTick} />}
                 <span
                   style={{
                     color: isToolCall1
@@ -584,10 +582,7 @@ export default function AnimatedAgentCLIPanel({
             {/* Planning */}
             {(isPlanning || pastPlanning) && (
               <div className="flex items-start gap-2">
-                <CLISpinnerShimmer
-                  done={!isPlanning}
-                  syncTick={isPlanning ? syncTick : undefined}
-                />
+                {isPlanning && <CLISpinnerShimmer syncTick={syncTick} />}
                 <span
                   style={{
                     color: isPlanning
@@ -608,10 +603,7 @@ export default function AnimatedAgentCLIPanel({
             {/* Read more context - toolCall2 */}
             {(isToolCall2 || pastToolCall2) && (
               <div className="flex items-start gap-2">
-                <CLISpinnerShimmer
-                  done={!isToolCall2}
-                  syncTick={isToolCall2 ? syncTick : undefined}
-                />
+                {isToolCall2 && <CLISpinnerShimmer syncTick={syncTick} />}
                 <span
                   style={{
                     color: isToolCall2
@@ -681,10 +673,7 @@ export default function AnimatedAgentCLIPanel({
             {/* Analyzing */}
             {(isAnalyzing || pastAnalyzing) && (
               <div className="flex items-start gap-2">
-                <CLISpinnerShimmer
-                  done={!isAnalyzing}
-                  syncTick={isAnalyzing ? syncTick : undefined}
-                />
+                {isAnalyzing && <CLISpinnerShimmer syncTick={syncTick} />}
                 <span
                   style={{
                     color: isAnalyzing
@@ -705,10 +694,7 @@ export default function AnimatedAgentCLIPanel({
             {/* Spawning / Started agents */}
             {(isInitializing || pastInitializing) && (
               <div className="flex items-start gap-2">
-                <CLISpinnerShimmer
-                  done={!isInitializing}
-                  syncTick={isInitializing ? syncTick : undefined}
-                />
+                {isInitializing && <CLISpinnerShimmer syncTick={syncTick} />}
                 <span
                   style={{
                     color: isInitializing
