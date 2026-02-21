@@ -13,9 +13,9 @@ export type Scenario = {
 
 export const SCENARIOS: Scenario[] = [
   { slug: "full-loop", label: "Full Loop", startPhase: "idle", loop: true, showPriorState: false },
+  { slug: "auth-high-fps", label: "Auth", type: "custom" },
   { slug: "auth", label: "Auth (left-aligned)", type: "custom" },
-  { slug: "auth-high-fps", label: "Auth (High FPS)", type: "custom" },
-  { slug: "auth-alt", label: "Auth Alt", type: "custom" },
+  { slug: "auth-alt", label: "Auth (wordmark)", type: "custom" },
   { slug: "idle", label: "Idle", startPhase: "idle", endPhase: "idle", loop: false, showPriorState: false },
   { slug: "typing", label: "Typing", startPhase: "typing", endPhase: "typing", loop: true, showPriorState: false },
   { slug: "questions", label: "Questions", startPhase: "questions", endPhase: "selection", loop: true, showPriorState: true },
