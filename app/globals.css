@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Theme tokens – ported from anysphere/site theme.css
+   ============================================================ */
+
+@theme {
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+
+  --color-theme-bg: #f7f7f4;
+  --color-theme-fg: #26251e;
+  --color-theme-fg-01: color-mix(in srgb, var(--color-theme-fg) 1%, transparent);
+  --color-theme-fg-02-5: color-mix(in srgb, var(--color-theme-fg) 2.5%, transparent);
+  --color-theme-fg-05: color-mix(in srgb, var(--color-theme-fg) 5%, transparent);
+  --color-theme-fg-07-5: color-mix(in srgb, var(--color-theme-fg) 7.5%, transparent);
+  --color-theme-fg-08: color-mix(in srgb, var(--color-theme-fg) 8%, transparent);
+  --color-theme-fg-10: color-mix(in srgb, var(--color-theme-fg) 10%, transparent);
+  --color-theme-fg-15: color-mix(in srgb, var(--color-theme-fg) 15%, transparent);
+  --color-theme-fg-20: color-mix(in srgb, var(--color-theme-fg) 20%, transparent);
+  --color-theme-fg-30: color-mix(in srgb, var(--color-theme-fg) 30%, transparent);
+
+  --color-theme-card-hex: #f2f1ed;
+  --color-theme-accent: #f54e00;
+
+  --color-theme-text: var(--color-theme-fg);
+  --color-theme-text-sec: color-mix(in srgb, var(--color-theme-fg) 60%, transparent);
+  --color-theme-text-ter: color-mix(in srgb, var(--color-theme-fg) 40%, transparent);
+
+  --color-theme-card-02-hex: #ebeae5;
+  --color-theme-card-03-hex: #e6e5e0;
+  --color-theme-card-04-hex: #e1e0db;
+  --color-theme-card-hover-hex: #ebeae5;
+
+  --color-theme-border-01: color-mix(in srgb, var(--color-theme-fg) 2.5%, transparent);
+  --color-theme-border-02: color-mix(in srgb, var(--color-theme-fg) 10%, transparent);
+
+  --color-theme-product-chrome: var(--color-theme-card-hex);
+  --color-theme-product-editor: var(--color-theme-bg);
+
+  --color-theme-bg-muted: var(--color-theme-card-hex);
+  --color-theme-bg-hover: color-mix(in srgb, var(--color-theme-fg) 5%, transparent);
+
+  --color-theme-product-ansi-green: #1f8a65;
+  --color-theme-product-ansi-red: #cf2d56;
+}
+
+/* Dark mode */
+[data-theme="dark"] {
+  --color-theme-bg: #14120b;
+  --color-theme-fg: #edecec;
+
+  --color-theme-card-hex: #1b1913;
+  --color-theme-card-02-hex: #201e18;
+  --color-theme-card-03-hex: #26241e;
+  --color-theme-card-04-hex: #2b2923;
+  --color-theme-card-hover-hex: #201e18;
+
+  --color-theme-text: var(--color-theme-fg);
+  --color-theme-text-sec: color-mix(in srgb, var(--color-theme-fg) 60%, transparent);
+  --color-theme-text-ter: color-mix(in srgb, var(--color-theme-fg) 40%, transparent);
+
+  --color-theme-border-01: color-mix(in srgb, var(--color-theme-fg) 2.5%, transparent);
+  --color-theme-border-02: color-mix(in srgb, var(--color-theme-fg) 10%, transparent);
+
+  --color-theme-fg-20: color-mix(in srgb, var(--color-theme-fg) 20%, transparent);
+
+  --color-theme-product-chrome: var(--color-theme-bg);
+  --color-theme-product-editor: var(--color-theme-card-hex);
+
+  --color-theme-bg-muted: var(--color-theme-card-hex);
+  --color-theme-bg-hover: color-mix(in srgb, var(--color-theme-fg) 5%, transparent);
+
+  --color-theme-product-ansi-green: #1f8a65;
+  --color-theme-product-ansi-red: #cf2d56;
+
+  --color-theme-accent: #f54e00;
+}
+
+/* ============================================================
+   Base styles
+   ============================================================ */
+
+html {
+  background-color: var(--color-theme-bg);
+  color: var(--color-theme-text);
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Berkeley Mono fallback stack */
+.font-berkeley-mono {
+  font-family:
+    var(--font-berkeley-mono, ui-monospace), SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* No-drag on images inside demo */
+.no-drag-img img {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Thin scrollbar utility */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-theme-border-02) transparent;
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-theme-border-02);
+  border-radius: 3px;
+}
