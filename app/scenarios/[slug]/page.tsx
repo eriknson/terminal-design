@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { SCENARIOS } from "@/lib/scenarios";
+import { SCENARIOS, getScenarioBySlug } from "@/lib/scenarios";
 import ScenarioPage from "@/components/ScenarioPage";
 
 export function generateStaticParams() {
@@ -13,7 +13,7 @@ export default async function Page({
 }) {
   const { slug } = await params;
 
-  if (!SCENARIOS.find((s) => s.slug === slug)) {
+  if (!getScenarioBySlug(slug)) {
     notFound();
   }
 

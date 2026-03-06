@@ -3,8 +3,8 @@ import "./globals.css";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
-  title: "Terminal Design",
-  description: "Cursor CLI terminal demo",
+  title: "Cursor Agent terminal scenarios",
+  description: "Mock terminal explorer for Cursor Agent scenarios",
 };
 
 export default function RootLayout({

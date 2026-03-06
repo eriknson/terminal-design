@@ -78,6 +78,16 @@
   --color-theme-accent: #f54e00;
 }
 
+:root {
+  --theme-radius-lg: 18px;
+  --theme-radius-md: 14px;
+  --theme-shadow-panel: 0 18px 46px rgba(17, 24, 39, 0.08);
+}
+
+[data-theme="dark"] {
+  --theme-shadow-panel: 0 22px 56px rgba(0, 0, 0, 0.3);
+}
+
 /* ============================================================
    Base styles
    ============================================================ */
@@ -122,4 +132,67 @@ body {
 .thin-scrollbar::-webkit-scrollbar-thumb {
   background: var(--color-theme-border-02);
   border-radius: 3px;
+}
+
+/* Scenario explorer */
+.theme-panel {
+  border: 1px solid var(--color-theme-border-02);
+  border-radius: var(--theme-radius-lg);
+  background: color-mix(
+    in srgb,
+    var(--color-theme-bg) 82%,
+    var(--color-theme-card-hex) 18%
+  );
+  box-shadow: var(--theme-shadow-panel);
+}
+
+.theme-panel-muted {
+  background: var(--color-theme-card-hex);
+}
+
+.theme-subtle-card {
+  border: 1px solid var(--color-theme-border-02);
+  border-radius: var(--theme-radius-md);
+  background: color-mix(
+    in srgb,
+    var(--color-theme-card-hex) 88%,
+    transparent
+  );
+}
+
+.theme-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--color-theme-border-02);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: color-mix(in srgb, var(--color-theme-bg) 72%, transparent);
+  color: var(--color-theme-text-sec);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.theme-kicker {
+  color: var(--color-theme-text-ter);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.theme-sidebar-item {
+  border-color: transparent;
+  background: transparent;
+}
+
+.theme-sidebar-item:hover {
+  border-color: var(--color-theme-border-02);
+  background: var(--color-theme-bg-hover);
+}
+
+.theme-sidebar-item[data-active="true"] {
+  border-color: var(--color-theme-border-02);
+  background: var(--color-theme-bg);
+  box-shadow: inset 0 0 0 1px var(--color-theme-border-01);
 }

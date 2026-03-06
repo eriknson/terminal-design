@@ -30,7 +30,7 @@ const CLI_DEMO_SCRIPT = {
   analyzingText: "Analyzing work scope",
   toolCall3: {
     action: "Read, searched",
-    detail: "4 files",
+    detail: "3 files",
     files: [
       "Read src/types/metrics.ts",
       "Read src/api/dataFetcher.ts",
@@ -103,6 +103,7 @@ const PHASE_ORDER: CLIDemoPhase[] = [
   "questionsNav2",
   "selection",
   "analyzing",
+  "toolCall3",
   "initializing",
   "subagents",
   "cloudTyping",
@@ -159,6 +160,8 @@ function CLISpinnerShimmer({
     </span>
   );
 }
+
+type DemoToolCall = (typeof CLI_DEMO_SCRIPT)["toolCall1"];
 
 // =============================================================================
 // AnimatedAgentCLIPanel
@@ -423,6 +426,7 @@ export default function AnimatedAgentCLIPanel({
   const isQuestionsNav2 = phase === "questionsNav2";
   const isSelection = phase === "selection";
   const isAnalyzing = phase === "analyzing";
+  const isToolCall3 = phase === "toolCall3";
   const isInitializing = phase === "initializing";
   const isSubagents = phase === "subagents";
   const isCloudTyping = phase === "cloudTyping";
@@ -449,6 +453,7 @@ export default function AnimatedAgentCLIPanel({
   const pastQuestions = isPast("questions");
   const pastSelection = isPast("selection");
   const pastAnalyzing = isPast("analyzing");
+  const pastToolCall3 = isPast("toolCall3");
   const pastInitializing = isPast("initializing");
   const pastCloudTyping = isPast("cloudTyping");
 
@@ -494,6 +499,68 @@ export default function AnimatedAgentCLIPanel({
     };
   };
   const input = getInput();
+
+  const renderToolCall = ({
+    active,
+    done,
+    toolCall,
+    visibleCount,
+    durationLabel,
+  }: {
+    active: boolean;
+    done: boolean;
+    toolCall: DemoToolCall;
+    visibleCount: number;
+    durationLabel: string;
+  }) => {
+    const visibleItems = active
+      ? toolCall.files.slice(0, visibleCount)
+      : toolCall.files;
+
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-start gap-2">
+          {active && <CLISpinnerShimmer syncTick={syncTick} />}
+          <span
+            style={{
+              color: active
+                ? "var(--color-theme-text)"
+                : "var(--color-theme-text-sec)",
+            }}
+          >
+            {active ? "Reading" : "Read"}{" "}
+            <span style={{ color: "var(--color-theme-text-ter)" }}>
+              {toolCall.detail}
+            </span>
+          </span>
+          {!active && (
+            <span
+              style={{ color: "var(--color-theme-text-ter)", opacity: 0.6 }}
+            >
+              {durationLabel}
+            </span>
+          )}
+        </div>
+
+        {visibleItems.length > 0 && (
+          <div className="space-y-0.5 pl-5 text-[11px] leading-5">
+            {visibleItems.map((item) => (
+              <div
+                key={item}
+                style={{
+                  color: done
+                    ? "var(--color-theme-text-ter)"
+                    : "var(--color-theme-text-sec)",
+                }}
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="font-berkeley-mono flex h-full w-full flex-col overflow-hidden text-[12px]"
@@ -557,26 +624,13 @@ export default function AnimatedAgentCLIPanel({
 
             {/* Read context - toolCall1 */}
             {(isToolCall1 || pastToolCall1) && (
-              <div className="flex items-start gap-2">
-                {isToolCall1 && <CLISpinnerShimmer syncTick={syncTick} />}
-                <span
-                  style={{
-                    color: isToolCall1
-                      ? "var(--color-theme-text)"
-                      : "var(--color-theme-text-sec)",
-                  }}
-                >
-                  {isToolCall1 ? "Reading" : "Read"}{" "}
-                  <span style={{ color: "var(--color-theme-text-ter)" }}>
-                    {CLI_DEMO_SCRIPT.toolCall1.detail}
-                  </span>
-                </span>
-                {!isToolCall1 && (
-                  <span style={{ color: "var(--color-theme-text-ter)", opacity: 0.6 }}>
-                    1s
-                  </span>
-                )}
-              </div>
+              renderToolCall({
+                active: isToolCall1,
+                done: pastToolCall1,
+                toolCall: CLI_DEMO_SCRIPT.toolCall1,
+                visibleCount: visibleFiles,
+                durationLabel: "1s",
+              })
             )}
 
             {/* Planning */}
@@ -602,26 +656,13 @@ export default function AnimatedAgentCLIPanel({
 
             {/* Read more context - toolCall2 */}
             {(isToolCall2 || pastToolCall2) && (
-              <div className="flex items-start gap-2">
-                {isToolCall2 && <CLISpinnerShimmer syncTick={syncTick} />}
-                <span
-                  style={{
-                    color: isToolCall2
-                      ? "var(--color-theme-text)"
-                      : "var(--color-theme-text-sec)",
-                  }}
-                >
-                  {isToolCall2 ? "Reading" : "Read"}{" "}
-                  <span style={{ color: "var(--color-theme-text-ter)" }}>
-                    {CLI_DEMO_SCRIPT.toolCall2.detail}
-                  </span>
-                </span>
-                {!isToolCall2 && (
-                  <span style={{ color: "var(--color-theme-text-ter)", opacity: 0.6 }}>
-                    1s
-                  </span>
-                )}
-              </div>
+              renderToolCall({
+                active: isToolCall2,
+                done: pastToolCall2,
+                toolCall: CLI_DEMO_SCRIPT.toolCall2,
+                visibleCount: visibleFiles2,
+                durationLabel: "1s",
+              })
             )}
 
             {/* Questions */}
@@ -689,6 +730,17 @@ export default function AnimatedAgentCLIPanel({
                   </span>
                 )}
               </div>
+            )}
+
+            {/* Final implementation read - toolCall3 */}
+            {(isToolCall3 || pastToolCall3) && (
+              renderToolCall({
+                active: isToolCall3,
+                done: pastToolCall3,
+                toolCall: CLI_DEMO_SCRIPT.toolCall3,
+                visibleCount: visibleFiles3,
+                durationLabel: "1s",
+              })
             )}
 
             {/* Spawning / Started agents */}
