@@ -103,6 +103,7 @@ const PHASE_ORDER: CLIDemoPhase[] = [
   "questionsNav2",
   "selection",
   "analyzing",
+  "toolCall3",
   "initializing",
   "subagents",
   "cloudTyping",
