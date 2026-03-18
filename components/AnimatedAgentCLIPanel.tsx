@@ -117,6 +117,78 @@ const SUBAGENT_TASKS = [
   { name: "subagent-3", title: "Incidents", model: "Composer-1", task: "Building incident feed" },
 ];
 
+const BUFFER_STEP_PHASES = [
+  "thinking",
+  "toolCall1",
+  "planning",
+  "toolCall2",
+  "analyzing",
+  "toolCall3",
+  "initializing",
+] as const;
+
+type BufferStepPhase = (typeof BUFFER_STEP_PHASES)[number];
+type BufferStepState = "queued" | "active" | "done";
+
+const BUFFER_STEPS: {
+  phase: BufferStepPhase;
+  activeLabel: string;
+  doneLabel: string;
+  detail: string;
+}[] = [
+  {
+    phase: "thinking",
+    activeLabel: "Thinking",
+    doneLabel: "Thought",
+    detail: CLI_DEMO_SCRIPT.thinkingText,
+  },
+  {
+    phase: "toolCall1",
+    activeLabel: "Reading",
+    doneLabel: "Read",
+    detail: CLI_DEMO_SCRIPT.toolCall1.detail,
+  },
+  {
+    phase: "planning",
+    activeLabel: "Planning",
+    doneLabel: "Planned",
+    detail: CLI_DEMO_SCRIPT.planningText,
+  },
+  {
+    phase: "toolCall2",
+    activeLabel: "Reading",
+    doneLabel: "Read",
+    detail: CLI_DEMO_SCRIPT.toolCall2.detail,
+  },
+  {
+    phase: "analyzing",
+    activeLabel: "Analyzing",
+    doneLabel: "Analyzed",
+    detail: CLI_DEMO_SCRIPT.analyzingText,
+  },
+  {
+    phase: "toolCall3",
+    activeLabel: "Reading",
+    doneLabel: "Read",
+    detail: CLI_DEMO_SCRIPT.toolCall3.detail,
+  },
+  {
+    phase: "initializing",
+    activeLabel: "Spawning",
+    doneLabel: "Started",
+    detail: "3 agents",
+  },
+];
+
+const BUFFER_STEP_PHASE_SET = new Set<CLIDemoPhase>([...BUFFER_STEP_PHASES]);
+const PRE_QUESTION_BUFFER_STEPS = BUFFER_STEPS.slice(0, 4);
+const POST_QUESTION_BUFFER_STEPS = BUFFER_STEPS.slice(4);
+
+function formatDuration(seconds: number) {
+  if (seconds >= 10) return `${Math.round(seconds)}s`;
+  return `${seconds.toFixed(1)}s`;
+}
+
 // =============================================================================
 // CLISpinnerShimmer
 // =============================================================================
@@ -160,6 +232,30 @@ function CLISpinnerShimmer({
   );
 }
 
+function CLIStatusGlyph({
+  state,
+  syncTick,
+}: {
+  state: BufferStepState;
+  syncTick: number;
+}) {
+  if (state === "active") {
+    return <CLISpinnerShimmer syncTick={syncTick} />;
+  }
+
+  const glyph = state === "done" ? "⬢" : "⬡";
+  const colorStyle =
+    state === "done"
+      ? "var(--color-theme-text-sec)"
+      : "var(--color-theme-text-ter)";
+
+  return (
+    <span style={{ color: colorStyle, position: "relative", top: "-1px" }}>
+      {glyph}
+    </span>
+  );
+}
+
 // =============================================================================
 // AnimatedAgentCLIPanel
 // =============================================================================
@@ -182,14 +278,11 @@ export default function AnimatedAgentCLIPanel({
       : ""
   );
   const [cloudTypedText, setCloudTypedText] = useState("");
-  const [visibleFiles, setVisibleFiles] = useState(0);
-
   const [syncTick, setSyncTick] = useState(0);
-
-  const [thinkingDuration, setThinkingDuration] = useState<number | null>(null);
-  const [planningDuration, setPlanningDuration] = useState<number | null>(null);
-  const [analyzingDuration, setAnalyzingDuration] = useState<number | null>(null);
-  const [initializingDuration, setInitializingDuration] = useState<number | null>(null);
+  const [stepDurations, setStepDurations] = useState<
+    Partial<Record<BufferStepPhase, number>>
+  >({});
+  const [activeStepElapsedMs, setActiveStepElapsedMs] = useState(0);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -200,7 +293,6 @@ export default function AnimatedAgentCLIPanel({
 
   const phaseIndex = PHASE_ORDER.indexOf(phase);
   const startIndex = PHASE_ORDER.indexOf(startPhase);
-  const endIndex = endPhase ? PHASE_ORDER.indexOf(endPhase) : -1;
 
   // Sync tick animation for subagents
   useEffect(() => {
@@ -209,6 +301,22 @@ export default function AnimatedAgentCLIPanel({
     }, 80);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!BUFFER_STEP_PHASE_SET.has(phase)) {
+      setActiveStepElapsedMs(0);
+      return;
+    }
+
+    const startedAt = Date.now();
+    setActiveStepElapsedMs(0);
+
+    const interval = setInterval(() => {
+      setActiveStepElapsedMs(Date.now() - startedAt);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [phase]);
 
   // Phase progression with duration tracking
   useEffect(() => {
@@ -220,12 +328,14 @@ export default function AnimatedAgentCLIPanel({
 
     const timer = setTimeout(() => {
       const elapsed = Date.now() - startTime;
-      const durationSec = Math.round(elapsed / 1000);
+      const durationSec = Math.max(elapsed / 1000, 0.1);
 
-      if (phase === "thinking") setThinkingDuration(durationSec || 1);
-      if (phase === "planning") setPlanningDuration(durationSec || 1);
-      if (phase === "analyzing") setAnalyzingDuration(durationSec || 1);
-      if (phase === "initializing") setInitializingDuration(durationSec || 1);
+      if (BUFFER_STEP_PHASE_SET.has(phase)) {
+        setStepDurations((prev) => ({
+          ...prev,
+          [phase]: durationSec,
+        }));
+      }
 
       const nextIndex = phaseIndex + 1;
 
@@ -255,11 +365,8 @@ export default function AnimatedAgentCLIPanel({
       setTypedText("");
     }
     setCloudTypedText("");
-    setVisibleFiles(0);
-    setThinkingDuration(null);
-    setPlanningDuration(null);
-    setAnalyzingDuration(null);
-    setInitializingDuration(null);
+    setStepDurations({});
+    setActiveStepElapsedMs(0);
   }
 
   // Typing animation for user prompt
@@ -289,59 +396,6 @@ export default function AnimatedAgentCLIPanel({
         i++;
       } else clearInterval(interval);
     }, PHASE_TIMINGS.cloudTyping / text.length);
-    return () => clearInterval(interval);
-  }, [phase]);
-
-  // File list animation for toolCall1
-  useEffect(() => {
-    if (phase !== "toolCall1") {
-      setVisibleFiles(0);
-      return;
-    }
-    const files = CLI_DEMO_SCRIPT.toolCall1.files;
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < files.length) {
-        setVisibleFiles(i + 1);
-        i++;
-      } else clearInterval(interval);
-    }, 150);
-    return () => clearInterval(interval);
-  }, [phase]);
-
-  // File list animation for toolCall2
-  const [visibleFiles2, setVisibleFiles2] = useState(0);
-  useEffect(() => {
-    if (phase !== "toolCall2") {
-      setVisibleFiles2(0);
-      return;
-    }
-    const files = CLI_DEMO_SCRIPT.toolCall2.files;
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < files.length) {
-        setVisibleFiles2(i + 1);
-        i++;
-      } else clearInterval(interval);
-    }, 150);
-    return () => clearInterval(interval);
-  }, [phase]);
-
-  // File list animation for toolCall3
-  const [visibleFiles3, setVisibleFiles3] = useState(0);
-  useEffect(() => {
-    if (phase !== "toolCall3") {
-      setVisibleFiles3(0);
-      return;
-    }
-    const files = CLI_DEMO_SCRIPT.toolCall3.files;
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < files.length) {
-        setVisibleFiles3(i + 1);
-        i++;
-      } else clearInterval(interval);
-    }, 150);
     return () => clearInterval(interval);
   }, [phase]);
 
@@ -414,16 +468,10 @@ export default function AnimatedAgentCLIPanel({
   // Phase states
   const isIdle = phase === "idle";
   const isTyping = phase === "typing";
-  const isThinking = phase === "thinking";
-  const isToolCall1 = phase === "toolCall1";
-  const isPlanning = phase === "planning";
-  const isToolCall2 = phase === "toolCall2";
   const isQuestions = phase === "questions";
   const isQuestionsNav1 = phase === "questionsNav1";
   const isQuestionsNav2 = phase === "questionsNav2";
   const isSelection = phase === "selection";
-  const isAnalyzing = phase === "analyzing";
-  const isInitializing = phase === "initializing";
   const isSubagents = phase === "subagents";
   const isCloudTyping = phase === "cloudTyping";
   const isCloudSaving = phase === "cloudSaving";
@@ -442,13 +490,8 @@ export default function AnimatedAgentCLIPanel({
   };
 
   const pastTyping = isPast("typing");
-  const pastThinking = isPast("thinking");
-  const pastToolCall1 = isPast("toolCall1");
-  const pastPlanning = isPast("planning");
-  const pastToolCall2 = isPast("toolCall2");
   const pastQuestions = isPast("questions");
   const pastSelection = isPast("selection");
-  const pastAnalyzing = isPast("analyzing");
   const pastInitializing = isPast("initializing");
   const pastCloudTyping = isPast("cloudTyping");
 
@@ -495,6 +538,90 @@ export default function AnimatedAgentCLIPanel({
   };
   const input = getInput();
 
+  const getBufferStepState = (bufferPhase: BufferStepPhase): BufferStepState => {
+    if (phase === bufferPhase) return "active";
+    if (isPast(bufferPhase)) return "done";
+    return "queued";
+  };
+
+  const getStepDuration = (bufferPhase: BufferStepPhase) =>
+    stepDurations[bufferPhase] ?? PHASE_TIMINGS[bufferPhase] / 1000;
+
+  const renderBufferStep = (step: (typeof BUFFER_STEPS)[number]) => {
+    const state = getBufferStepState(step.phase);
+    const isActive = state === "active";
+    const isDone = state === "done";
+    const progressPercent = isActive
+      ? Math.min((activeStepElapsedMs / PHASE_TIMINGS[step.phase]) * 100, 100)
+      : 0;
+
+    return (
+      <div
+        key={step.phase}
+        className="flex items-start gap-2 rounded-[6px] px-2 py-1.5 transition-opacity"
+        style={{
+          opacity: state === "queued" ? 0.5 : 1,
+          backgroundColor: isActive
+            ? "rgba(255,255,255,0.03)"
+            : "transparent",
+        }}
+      >
+        <CLIStatusGlyph state={state} syncTick={syncTick} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div
+                style={{
+                  color: isActive
+                    ? "var(--color-theme-text)"
+                    : isDone
+                      ? "var(--color-theme-text-sec)"
+                      : "var(--color-theme-text-ter)",
+                }}
+              >
+                {isActive ? step.activeLabel : isDone ? step.doneLabel : step.activeLabel}
+              </div>
+              <div
+                className="truncate"
+                style={{
+                  color: isDone
+                    ? "var(--color-theme-text-ter)"
+                    : "var(--color-theme-text-sec)",
+                }}
+              >
+                {step.detail}
+              </div>
+            </div>
+            <span
+              className="whitespace-nowrap"
+              style={{ color: "var(--color-theme-text-ter)", opacity: 0.75 }}
+            >
+              {isActive
+                ? `${Math.round(progressPercent)}%`
+                : isDone
+                  ? formatDuration(getStepDuration(step.phase))
+                  : "Queued"}
+            </span>
+          </div>
+          {isActive && (
+            <div
+              className="mt-1.5 h-px w-full overflow-hidden rounded-full"
+              style={{ backgroundColor: "var(--color-theme-border-02)" }}
+            >
+              <div
+                className="h-full rounded-full transition-[width] duration-100"
+                style={{
+                  width: `${progressPercent}%`,
+                  backgroundColor: planGreen,
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="font-berkeley-mono flex h-full w-full flex-col overflow-hidden text-[12px]"
       style={{
@@ -534,95 +661,7 @@ export default function AnimatedAgentCLIPanel({
 
           {/* Buffer of loading steps */}
           <div className="space-y-2">
-            {/* Thinking */}
-            {(isThinking || pastThinking) && (
-              <div className="flex items-start gap-2">
-                {isThinking && <CLISpinnerShimmer syncTick={syncTick} />}
-                <span
-                  style={{
-                    color: isThinking
-                      ? "var(--color-theme-text)"
-                      : "var(--color-theme-text-sec)",
-                  }}
-                >
-                  {isThinking ? "Thinking" : "Thought"}
-                </span>
-                {!isThinking && (
-                  <span style={{ color: "var(--color-theme-text-ter)", opacity: 0.6 }}>
-                    3s
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Read context - toolCall1 */}
-            {(isToolCall1 || pastToolCall1) && (
-              <div className="flex items-start gap-2">
-                {isToolCall1 && <CLISpinnerShimmer syncTick={syncTick} />}
-                <span
-                  style={{
-                    color: isToolCall1
-                      ? "var(--color-theme-text)"
-                      : "var(--color-theme-text-sec)",
-                  }}
-                >
-                  {isToolCall1 ? "Reading" : "Read"}{" "}
-                  <span style={{ color: "var(--color-theme-text-ter)" }}>
-                    {CLI_DEMO_SCRIPT.toolCall1.detail}
-                  </span>
-                </span>
-                {!isToolCall1 && (
-                  <span style={{ color: "var(--color-theme-text-ter)", opacity: 0.6 }}>
-                    1s
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Planning */}
-            {(isPlanning || pastPlanning) && (
-              <div className="flex items-start gap-2">
-                {isPlanning && <CLISpinnerShimmer syncTick={syncTick} />}
-                <span
-                  style={{
-                    color: isPlanning
-                      ? "var(--color-theme-text)"
-                      : "var(--color-theme-text-sec)",
-                  }}
-                >
-                  {isPlanning ? "Planning" : "Planned"}
-                </span>
-                {!isPlanning && (
-                  <span style={{ color: "var(--color-theme-text-ter)", opacity: 0.6 }}>
-                    2s
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Read more context - toolCall2 */}
-            {(isToolCall2 || pastToolCall2) && (
-              <div className="flex items-start gap-2">
-                {isToolCall2 && <CLISpinnerShimmer syncTick={syncTick} />}
-                <span
-                  style={{
-                    color: isToolCall2
-                      ? "var(--color-theme-text)"
-                      : "var(--color-theme-text-sec)",
-                  }}
-                >
-                  {isToolCall2 ? "Reading" : "Read"}{" "}
-                  <span style={{ color: "var(--color-theme-text-ter)" }}>
-                    {CLI_DEMO_SCRIPT.toolCall2.detail}
-                  </span>
-                </span>
-                {!isToolCall2 && (
-                  <span style={{ color: "var(--color-theme-text-ter)", opacity: 0.6 }}>
-                    1s
-                  </span>
-                )}
-              </div>
-            )}
+            {pastTyping && PRE_QUESTION_BUFFER_STEPS.map(renderBufferStep)}
 
             {/* Questions */}
             {(isNavigating || pastQuestions) && (
@@ -670,42 +709,7 @@ export default function AnimatedAgentCLIPanel({
               </div>
             )}
 
-            {/* Analyzing */}
-            {(isAnalyzing || pastAnalyzing) && (
-              <div className="flex items-start gap-2">
-                {isAnalyzing && <CLISpinnerShimmer syncTick={syncTick} />}
-                <span
-                  style={{
-                    color: isAnalyzing
-                      ? "var(--color-theme-text)"
-                      : "var(--color-theme-text-sec)",
-                  }}
-                >
-                  {isAnalyzing ? "Analyzing" : "Analyzed"} scope
-                </span>
-                {!isAnalyzing && (
-                  <span style={{ color: "var(--color-theme-text-ter)", opacity: 0.6 }}>
-                    2s
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Spawning / Started agents */}
-            {(isInitializing || pastInitializing) && (
-              <div className="flex items-start gap-2">
-                {isInitializing && <CLISpinnerShimmer syncTick={syncTick} />}
-                <span
-                  style={{
-                    color: isInitializing
-                      ? "var(--color-theme-text)"
-                      : "var(--color-theme-text-sec)",
-                  }}
-                >
-                  {isInitializing ? "Spawning" : "Started"} 3 agents
-                </span>
-              </div>
-            )}
+            {pastTyping && POST_QUESTION_BUFFER_STEPS.map(renderBufferStep)}
 
             {/* Subagents */}
             {pastInitializing && (
